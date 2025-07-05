@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Appareil avec ID manuel</title>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  <style>
+    body { font-family: Arial; max-width: 600px; margin: auto; padding: 20px; }
+    input, button { width: 100%; padding: 10px; margin: 10px 0; font-size: 16px; }
+    #status, #searchResult { white-space: pre-wrap; margin-top: 15px; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+  <h1>Enregistrer ou chercher un appareil par ID</h1>
+
+  <input id="inputId" type="text" placeholder="Entrez votre mot de passe / ID (lettres, chiffres, -, _)" />
+  <button onclick="saveDevice()">Enregistrer mon appareil</button>
+  <div id="status"></div>
+
+  <hr/>
+
+  <input id="searchId" type="text" placeholder="Rechercher un appareil par ID" />
+  <button onclick="searchDevice()">Rechercher</button>
+  <div id="searchResult"></div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyD5N4yMLv5jkj6doGtixAGPOf2Rmvv1NKw",
+      authDomain: "casting-app-bird-orange.firebaseapp.com",
+      databaseURL: "https://casting-app-bird-orange-default-rtdb.firebaseio.com",
+      projectId: "casting-app-bird-orange",
+      storageBucket: "casting-app-bird-orange.firebasestorage.app",
+      messagingSenderId: "1065895542160",
+      appId: "1:1065895542160:web:936a81a69f303fe353c715",
+      measurementId: "G-EDRHNHHS2G"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // Valide la clé ID (pas de caractères interdits pour Firebase)
+    function isValidId(id) {
+      return /^[a-zA-Z0-9_-]+$/.test(id);
+    }
+
+    function saveDevice() {
+      const id = document.getElementById('inputId').value.trim();
+      const status = document.getElementById('status');
+      if (!id) {
+        status.innerText = "❌ Veuillez entrer un ID.";
+        return;
+      }
+      if (!isValidId(id)) {
+        status.innerText = "❌ ID invalide. Utilisez seulement lettres, chiffres, - ou _";
+        return;
+      }
+
+      const data = {
+        id: id,
+        timestamp: new Date().toISOString(),
+        userAgent: navigator.userAgent
+      };
+
+      db.ref("devices/" + id).set(data)
+        .then(() => {
+          status.innerText = "✅ Appareil enregistré avec succès !\nID : " + id;
+        })
+        .catch(err => {
+          status.innerText = "Erreur : " + err.message;
+        });
+    }
+
+    function searchDevice() {
+      const id = document.getElementById('searchId').value.trim();
+      const result = document.getElementById('searchResult');
+      if (!id) {
+        result.innerText = "❌ Veuillez entrer un ID à rechercher.";
+        return;
+      }
+      if (!isValidId(id)) {
+        result.innerText = "❌ ID invalide. Utilisez seulement lettres, chiffres, - ou _";
+        return;
+      }
+
+      db.ref("devices/" + id).get()
+        .then(snapshot => {
+          if (snapshot.exists()) {
+            const data = snapshot.val();
+            result.innerText = `✅ Appareil trouvé :\nID : ${data.id}\nEnregistré le : ${data.timestamp}\nNavigateur : ${data.userAgent}`;
+          } else {
+            result.innerText = "❌ Aucun appareil trouvé avec cet ID.";
+          }
+        })
+        .catch(err => {
+          result.innerText = "Erreur : " + err.message;
+        });
+    }
+  </script>
+
+</body>
+</html>
+
+
+
+
+
+  
